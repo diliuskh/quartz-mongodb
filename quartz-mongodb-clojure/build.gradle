@@ -65,7 +65,7 @@ publishing {
     publications {
         QuartzMongoDB(MavenPublication) {
             from components.java
-            groupId "com.novemberain"
+            groupId "org.lazystone"
             artifactId(jar.baseName)
             version(projectVersion)
 
@@ -77,8 +77,8 @@ publishing {
 }
 
 bintray {
-    user = System.getenv("BINTRAY_USERNAME")
-    key = System.getenv("BINTRAY_API_KEY")
+    user = BINTRAY_USERNAME
+    key = BINTRAY_API_KEY
     publications = ["QuartzMongoDB"]
     pkg {
         repo = "maven"
