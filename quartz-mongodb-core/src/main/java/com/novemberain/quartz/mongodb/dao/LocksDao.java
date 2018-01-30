@@ -10,8 +10,8 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.result.UpdateResult;
 import com.novemberain.quartz.mongodb.util.Clock;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -70,7 +70,7 @@ public class LocksDao {
   }
 
   public List<TriggerKey> findOwnTriggersLocks() {
-    final List<TriggerKey> keys = new LinkedList<>();
+    final List<TriggerKey> keys = new ArrayList<>();
     final Bson filter = createTriggersLocksFilter(instanceId);
     for (Document doc : locksCollection.find(filter)) {
       keys.add(toTriggerKey(doc));

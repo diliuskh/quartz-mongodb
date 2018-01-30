@@ -1,16 +1,18 @@
 package com.novemberain.quartz.mongodb
 
-import org.joda.time.DateTime
 import org.quartz.Scheduler
 import org.quartz.SchedulerException
 import org.quartz.impl.StdSchedulerFactory
+
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class QuartzHelper {
 
     /**
      * Creates standard properties with MongoDBJobStore.
      */
-    static def Properties createProps() {
+    static Properties createProps() {
         def props = new Properties()
         props.setProperty("org.quartz.jobStore.class",
                 "com.novemberain.quartz.mongodb.MongoDBJobStore")
@@ -31,7 +33,7 @@ class QuartzHelper {
     /**
      * Creates properties for clustered scheduler.
      */
-    static def Properties createClusteredProps(String instanceName) {
+    static Properties createClusteredProps(String instanceName) {
         def props = createProps()
         props.setProperty("org.quartz.jobStore.isClustered", "true")
         props.setProperty("org.quartz.scheduler.instanceId", instanceName)
@@ -42,7 +44,7 @@ class QuartzHelper {
     /**
      * Create a new Scheduler with the following properties.
      */
-    static def Scheduler createScheduler(Properties properties) {
+    static Scheduler createScheduler(Properties properties) {
         def factory = new StdSchedulerFactory()
         factory.initialize(properties)
         def scheduler = factory.getScheduler()
@@ -53,7 +55,7 @@ class QuartzHelper {
     /**
      * Create and start the default scheduler.
      */
-    static def Scheduler startDefaultScheduler() {
+    static Scheduler startDefaultScheduler() {
         createScheduler(createProps())
     }
 
@@ -64,14 +66,14 @@ class QuartzHelper {
     /**
      * Creates a cluster of schedulers with given names.
      */
-    static def List<Scheduler> createCluster(String... names) {
+    static List<Scheduler> createCluster(String... names) {
         names.collect { createClusteredScheduler(it) }
     }
 
     /**
      * Shutdown all schedulers in given cluster.
      */
-    static def void shutdown(List<Scheduler> cluster) {
+    static void shutdown(List<Scheduler> cluster) {
         cluster.each {
             try {
                 it.shutdown()
@@ -81,11 +83,11 @@ class QuartzHelper {
         }
     }
 
-    static def Date inSeconds(int n) {
-        DateTime.now().plusSeconds(n).toDate()
+    static Date inSeconds(int n) {
+        Date.from(Instant.now().plusSeconds(n))
     }
 
-    static def Date in2Months() {
-        DateTime.now().plusMonths(2).toDate()
+    static Date in2Months() {
+        Date.from(Instant.now().plus(61, ChronoUnit.DAYS))
     }
 }

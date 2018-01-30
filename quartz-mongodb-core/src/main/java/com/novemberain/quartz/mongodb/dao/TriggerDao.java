@@ -14,12 +14,7 @@ import com.novemberain.quartz.mongodb.Constants;
 import com.novemberain.quartz.mongodb.trigger.TriggerConverter;
 import com.novemberain.quartz.mongodb.util.Keys;
 import com.novemberain.quartz.mongodb.util.QueryHelper;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -86,7 +81,7 @@ public class TriggerDao {
   }
 
   public List<String> getGroupNames() {
-    return triggerCollection.distinct(KEY_GROUP, String.class).into(new ArrayList<String>());
+    return triggerCollection.distinct(KEY_GROUP, String.class).into(new ArrayList<>());
   }
 
   public String getState(TriggerKey triggerKey) {
@@ -103,7 +98,7 @@ public class TriggerDao {
   }
 
   public List<OperableTrigger> getTriggersForJob(Document doc) throws JobPersistenceException {
-    final List<OperableTrigger> triggers = new LinkedList<OperableTrigger>();
+    final List<OperableTrigger> triggers = new ArrayList<>();
     if (doc != null) {
       for (Document item : findByJobId(doc.get("_id"))) {
         triggers.add(triggerConverter.toTrigger(item));
@@ -113,7 +108,7 @@ public class TriggerDao {
   }
 
   public Set<TriggerKey> getTriggerKeys(GroupMatcher<TriggerKey> matcher) {
-    Set<TriggerKey> keys = new HashSet<TriggerKey>();
+    Set<TriggerKey> keys = new HashSet<>();
     Bson query = queryHelper.matchingKeysConditionFor(matcher);
     for (Document doc : triggerCollection.find(query).projection(Keys.KEY_AND_GROUP_FIELDS)) {
       keys.add(Keys.toTriggerKey(doc));
@@ -126,7 +121,7 @@ public class TriggerDao {
         triggerCollection
             .find(Filters.eq(Constants.TRIGGER_JOB_ID, job.get("_id")))
             .limit(2)
-            .into(new ArrayList<Document>(2));
+            .into(new ArrayList<>(2));
     return referencedTriggers.size() == 1;
   }
 

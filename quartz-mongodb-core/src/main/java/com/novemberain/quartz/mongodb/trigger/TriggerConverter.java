@@ -80,7 +80,7 @@ public class TriggerConverter {
    * @throws JobPersistenceException if could not construct trigger instance or could not
    *     deserialize job data map.
    */
-  public OperableTrigger toTriggerWithOptionalJob(TriggerKey triggerKey, Document triggerDoc)
+  private OperableTrigger toTriggerWithOptionalJob(TriggerKey triggerKey, Document triggerDoc)
       throws JobPersistenceException {
     OperableTrigger trigger = createNewInstance(triggerDoc);
 
@@ -139,7 +139,7 @@ public class TriggerConverter {
       @SuppressWarnings("unchecked")
       Class<OperableTrigger> triggerClass =
           (Class<OperableTrigger>) getTriggerClassLoader().loadClass(triggerClassName);
-      return triggerClass.newInstance();
+      return triggerClass.getDeclaredConstructor().newInstance();
     } catch (ClassNotFoundException e) {
       throw new JobPersistenceException("Could not find trigger class " + triggerClassName);
     } catch (Exception e) {

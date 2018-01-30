@@ -30,7 +30,6 @@ dependencies {
     compile("org.quartz-scheduler:quartz:2.2.3")
     compile("org.mongodb:mongodb-driver:3.6.1")
     compile("org.slf4j:slf4j-api:1.7.25")
-    compile("commons-codec:commons-codec:1.11")
 
     testCompile("org.slf4j:slf4j-simple:1.7.25")
     testCompile("org.codehaus.groovy:groovy-all:2.4.1")

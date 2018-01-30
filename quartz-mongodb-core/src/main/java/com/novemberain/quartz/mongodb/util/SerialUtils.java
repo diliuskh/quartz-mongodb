@@ -1,20 +1,18 @@
 package com.novemberain.quartz.mongodb.util;
 
 import java.io.*;
-import java.util.Collections;
+import java.util.Base64;
 import java.util.Map;
-import org.apache.commons.codec.binary.Base64;
 import org.bson.types.Binary;
 import org.quartz.Calendar;
 import org.quartz.JobDataMap;
 import org.quartz.JobPersistenceException;
 
-public class SerialUtils {
+public final class SerialUtils {
 
-  private static final String SERIALIZE_MESSAGE_FORMAT =
-      "Unable to serialize JobDataMap for insertion into "
-          + "database because the value of property '%s' "
-          + "is not serializable: %s";
+  private SerialUtils() {
+    throw new AssertionError();
+  }
 
   public static Object serialize(Calendar calendar) throws JobPersistenceException {
     ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -48,25 +46,18 @@ public class SerialUtils {
   }
 
   public static String serialize(JobDataMap jobDataMap) throws IOException {
-    try {
-      byte[] bytes = stringMapToBytes(jobDataMap.getWrappedMap());
-      return Base64.encodeBase64String(bytes);
-    } catch (NotSerializableException e) {
-      return rethrowEnhanced(jobDataMap, e);
-    }
+    byte[] bytes = stringMapToBytes(jobDataMap.getWrappedMap());
+    return Base64.getEncoder().encodeToString(bytes);
   }
 
-  public static Map<String, ?> deserialize(JobDataMap jobDataMap, String clob) throws IOException {
+  public static Map<String, ?> deserialize(String clob) throws IOException {
     try {
-      byte[] bytes = Base64.decodeBase64(clob);
+      byte[] bytes = Base64.getDecoder().decode(clob);
       return stringMapFromBytes(bytes);
-    } catch (NotSerializableException e) {
-      rethrowEnhanced(jobDataMap, e);
-    } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    } catch (IllegalArgumentException | ClassNotFoundException e) {
+      throw new IOException(
+          String.format("Could not deserialize '%s' into the JobDataMap", clob), e);
     }
-    return Collections.emptyMap();
   }
 
   private static byte[] stringMapToBytes(Object object) throws IOException {
@@ -85,26 +76,5 @@ public class SerialUtils {
     Map<String, ?> map = (Map<String, ?>) ois.readObject();
     ois.close();
     return map;
-  }
-
-  private static String rethrowEnhanced(JobDataMap jobDataMap, NotSerializableException e)
-      throws NotSerializableException {
-    final String key = getKeyOfNonSerializableStringMapEntry(jobDataMap.getWrappedMap());
-    throw new NotSerializableException(
-        String.format(SERIALIZE_MESSAGE_FORMAT, key, e.getMessage()));
-  }
-
-  private static String getKeyOfNonSerializableStringMapEntry(Map<String, ?> data) {
-    for (Map.Entry<String, ?> entry : data.entrySet()) {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try {
-        ObjectOutputStream out = new ObjectOutputStream(baos);
-        out.writeObject(entry.getValue());
-        out.flush();
-      } catch (IOException e) {
-        return entry.getKey();
-      }
-    }
-    return null;
   }
 }

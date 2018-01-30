@@ -4,12 +4,15 @@ import static com.mongodb.client.model.Sorts.ascending;
 
 import com.mongodb.Block;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.novemberain.quartz.mongodb.cluster.Scheduler;
 import com.novemberain.quartz.mongodb.util.Clock;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -25,7 +28,7 @@ public class SchedulerDao {
   public static final String LAST_CHECKIN_TIME_FIELD = "lastCheckinTime";
   public static final String CHECKIN_INTERVAL_FIELD = "checkinInterval";
 
-  public final MongoCollection<Document> schedulerCollection;
+  private final MongoCollection<Document> schedulerCollection;
 
   public final String schedulerName;
   public final String instanceId;
@@ -107,7 +110,7 @@ public class SchedulerDao {
    * @return schedler instances ordered by last check-in time
    */
   public List<Scheduler> getAllByCheckinTime() {
-    final List<Scheduler> schedulers = new LinkedList<Scheduler>();
+    final List<Scheduler> schedulers = new ArrayList<>();
     schedulerCollection
         .find()
         .sort(ascending(LAST_CHECKIN_TIME_FIELD))
@@ -162,12 +165,7 @@ public class SchedulerDao {
   }
 
   private Block<Document> createResultConverter(final List<Scheduler> schedulers) {
-    return new Block<Document>() {
-      @Override
-      public void apply(Document document) {
-        schedulers.add(toScheduler(document));
-      }
-    };
+    return document -> schedulers.add(toScheduler(document));
   }
 
   private Scheduler toScheduler(Document document) {

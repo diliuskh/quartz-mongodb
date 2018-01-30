@@ -22,9 +22,12 @@ public class QueryHelper {
         return Filters.regex(KEY_GROUP, ".*" + compareToValue + "$");
       case CONTAINS:
         return Filters.regex(KEY_GROUP, compareToValue);
+      case ANYTHING:
+        return new BsonDocument();
+      default:
+        throw new IllegalArgumentException(
+            "Unknown matcher: " + matcher.getCompareWithOperator().name());
     }
-
-    return new BsonDocument();
   }
 
   public Bson inGroups(Collection<String> groups) {

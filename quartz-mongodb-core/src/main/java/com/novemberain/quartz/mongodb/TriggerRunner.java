@@ -23,12 +23,7 @@ public class TriggerRunner {
   private static final Logger log = LoggerFactory.getLogger(TriggerRunner.class);
 
   private static final Comparator<OperableTrigger> NEXT_FIRE_TIME_COMPARATOR =
-      new Comparator<OperableTrigger>() {
-        @Override
-        public int compare(OperableTrigger o1, OperableTrigger o2) {
-          return (int) (o1.getNextFireTime().getTime() - o2.getNextFireTime().getTime());
-        }
-      };
+      Comparator.comparing(Trigger::getNextFireTime);
 
   private MisfireHandler misfireHandler;
   private TriggerAndJobPersister persister;
@@ -40,7 +35,7 @@ public class TriggerRunner {
   private LocksDao locksDao;
   private CalendarDao calendarDao;
 
-  public TriggerRunner(
+  TriggerRunner(
       TriggerAndJobPersister persister,
       TriggerDao triggerDao,
       JobDao jobDao,
@@ -80,7 +75,7 @@ public class TriggerRunner {
 
   public List<TriggerFiredResult> triggersFired(List<OperableTrigger> triggers)
       throws JobPersistenceException {
-    List<TriggerFiredResult> results = new ArrayList<TriggerFiredResult>(triggers.size());
+    List<TriggerFiredResult> results = new ArrayList<>(triggers.size());
 
     for (OperableTrigger trigger : triggers) {
       log.debug("Fired trigger {}", trigger.getKey());
@@ -105,7 +100,7 @@ public class TriggerRunner {
 
   private List<OperableTrigger> acquireNextTriggers(Date noLaterThanDate, int maxCount)
       throws JobPersistenceException {
-    Map<TriggerKey, OperableTrigger> triggers = new HashMap<TriggerKey, OperableTrigger>();
+    Map<TriggerKey, OperableTrigger> triggers = new HashMap<>();
 
     for (Document triggerDoc : triggerDao.findEligibleToRun(noLaterThanDate)) {
       if (acquiredEnough(triggers, maxCount)) {
@@ -145,20 +140,14 @@ public class TriggerRunner {
       }
     }
 
-    return new ArrayList<OperableTrigger>(triggers.values());
+    return new ArrayList<>(triggers.values());
   }
 
   private boolean prepareForFire(Date noLaterThanDate, OperableTrigger trigger)
       throws JobPersistenceException {
     // TODO don't remove when recovering trigger
-    if (persister.removeTriggerWithoutNextFireTime(trigger)) {
-      return false;
-    }
-
-    if (notAcquirableAfterMisfire(noLaterThanDate, trigger)) {
-      return false;
-    }
-    return true;
+    return !(persister.removeTriggerWithoutNextFireTime(trigger)
+        || notAcquirableAfterMisfire(noLaterThanDate, trigger));
   }
 
   private boolean acquiredEnough(Map<TriggerKey, OperableTrigger> triggers, int maxCount) {

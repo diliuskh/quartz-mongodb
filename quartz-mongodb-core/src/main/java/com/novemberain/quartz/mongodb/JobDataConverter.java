@@ -1,7 +1,6 @@
 package com.novemberain.quartz.mongodb;
 
 import com.novemberain.quartz.mongodb.util.SerialUtils;
-import java.io.IOException;
 import java.util.Map;
 import org.bson.Document;
 import org.quartz.JobDataMap;
@@ -37,7 +36,7 @@ public class JobDataConverter {
       String jobDataString;
       try {
         jobDataString = SerialUtils.serialize(from);
-      } catch (IOException e) {
+      } catch (Exception e) {
         throw new JobPersistenceException("Could not serialise job data.", e);
       }
       to.put(Constants.JOB_DATA, jobDataString);
@@ -60,10 +59,7 @@ public class JobDataConverter {
     if (base64Preferred) {
       return toJobDataFromBase64(from, to);
     } else {
-      if (toJobDataFromField(from, to)) {
-        return true;
-      }
-      return toJobDataFromBase64(from, to);
+      return toJobDataFromField(from, to) || toJobDataFromBase64(from, to);
     }
   }
 
@@ -78,8 +74,8 @@ public class JobDataConverter {
     }
     Map<String, ?> jobDataMap;
     try {
-      jobDataMap = SerialUtils.deserialize(null, jobDataBase64String);
-    } catch (IOException e) {
+      jobDataMap = SerialUtils.deserialize(jobDataBase64String);
+    } catch (Exception e) {
       throw new JobPersistenceException("Could not deserialize job data.", e);
     }
     to.putAll(jobDataMap);
