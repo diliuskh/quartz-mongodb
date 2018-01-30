@@ -17,5 +17,4 @@ public interface Constants {
   String STATE_PAUSED_BLOCKED = "pausedBlocked";
   String STATE_BLOCKED = "blocked";
   String STATE_ERROR = "error";
-
 }

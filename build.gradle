@@ -1,79 +1,85 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-}
-
 plugins {
-    id 'net.researchgate.release' version '2.4.0'
-    id "com.jfrog.bintray" version "1.7"
-    id "com.sourcemuse.mongo" version "0.13.0"
+    // https://github.com/sherter/google-java-format-gradle-plugin
+    id "com.github.sherter.google-java-format" version "0.6"
+
+    // https://github.com/tbroyer/gradle-errorprone-plugin
+    id "net.ltgt.errorprone" version "0.0.13"
+
+    // http://spotbugs.readthedocs.io/en/latest/gradle.html
+    id "com.github.spotbugs" version "1.6.0"
+
+    id "net.researchgate.release" version "2.6.0"
+    id "com.jfrog.bintray" version "1.8.0"
+    id "com.sourcemuse.mongo" version "1.0.5"
+    id "java"
+    id "idea"
+    id "groovy"
+    id "maven"
+    id "maven-publish"
 }
 
-allprojects {
-	repositories {
-		jcenter()
-	}
-	apply plugin: 'maven'
-	apply plugin: 'maven-publish'
-	apply plugin: 'java'
-}
-
-apply plugin: 'groovy'
-apply plugin: 'idea'
-apply plugin: 'mongo'
-
-jar {
-    baseName = 'quartz-mongodb'
-    version =  version
-}
+sourceCompatibility = targetCompatibility= 1.8
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
-configurations {
-    provided
-    compile.extendsFrom provided
-}
-sourceSets {
-    main { compileClasspath += configurations.provided }
+googleJavaFormat {
+    toolVersion = '1.5'
 }
 
-idea {
-    module {
-        scopes.PROVIDED.plus += [configurations.provided]
-    }
-}
 dependencies {
-    compile("org.quartz-scheduler:quartz:2.2.3")
-    compile("org.mongodb:mongodb-driver:3.4.0")
-    compile("commons-codec:commons-codec:1.10")
-    compile("org.slf4j:slf4j-api:1.7.21")
-    provided("org.clojure:clojure:1.7.0")
+    errorprone "com.google.errorprone:error_prone_core:${errorProneVersion}"
 
-    testCompile("joda-time:joda-time:2.8.2")
-    testCompile("org.slf4j:slf4j-simple:1.7.10")
+    compile("org.quartz-scheduler:quartz:2.2.3")
+    compile("org.mongodb:mongodb-driver:3.6.1")
+    compile("org.slf4j:slf4j-api:1.7.25")
+    compile("commons-codec:commons-codec:1.11")
+
+    compileOnly("org.clojure:clojure:1.9.0")
+    testCompile("org.clojure:clojure:1.9.0")
+
+    testCompile("joda-time:joda-time:2.9.9")
+    testCompile("org.slf4j:slf4j-simple:1.7.25")
     testCompile("org.codehaus.groovy:groovy-all:2.4.1")
     testCompile("org.spockframework:spock-core:1.0-groovy-2.4")
-    testRuntime("cglib:cglib-nodep:3.1")
-    testRuntime("org.objenesis:objenesis:2.1")
+    testRuntime("cglib:cglib-nodep:3.2.6")
+    testRuntime("org.objenesis:objenesis:2.5.1")
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.5'
+spotbugs {
+    // https://github.com/spotbugs/spotbugs/releases/latest
+    toolVersion = '3.1.1'
+    ignoreFailures=true
+}
+// To generate an HTML report instead of XML
+import com.github.spotbugs.SpotBugsTask
+tasks.withType(SpotBugsTask) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
 }
 
+test {
+    runWithMongoDb = true
+}
+
+mongo {
+    journalingEnabled true
+    port 12345
+    logging "console"
+    mongoVersion "3.6.2"
+}
+
+jar {
+    baseName = "quartz-mongodb"
+    version = version
+}
 
 release {
     scmAdapters = [net.researchgate.release.GitAdapter]
-    git {
-        pushToRemote = 'origin'
-    }
 }
 
 task sourceJar(type: Jar) {
@@ -86,12 +92,11 @@ artifacts {
     archives sourceJar
 }
 
-
 publishing {
     publications {
         QuartzMongoDB(MavenPublication) {
             from components.java
-            groupId 'com.novemberain'
+            groupId "com.novemberain"
             artifactId(jar.baseName)
             version(projectVersion)
 
@@ -102,32 +107,28 @@ publishing {
     }
 }
 
-tasks.withType(Test){
-    runWithMongoDb = true
-    mongo {
-        journalingEnabled true
-        port 12345
-        logging 'console'
-        mongoVersion '2.6.6'
-    }
-}
-
 bintray {
     user = System.getenv("BINTRAY_USERNAME")
-    key  = System.getenv("BINTRAY_API_KEY")
-    publications = ['QuartzMongoDB']
+    key = System.getenv("BINTRAY_API_KEY")
+    publications = ["QuartzMongoDB"]
     pkg {
-        repo = 'maven'
-        name = 'quartz-mongodb'
-        labels = ['quartz', 'mongodb']
-        userOrg = 'michaelklishin'
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/michaelklishin/quartz-mongodb.git'
+        repo = "maven"
+        name = "quartz-mongodb"
+        labels = ["quartz", "mongodb"]
+        userOrg = "michaelklishin"
+        licenses = ["Apache-2.0"]
+        vcsUrl = "https://github.com/michaelklishin/quartz-mongodb.git"
 
         version {
             name = projectVersion
-			      desc = 'MongoDB-backed job store for the Quartz scheduler'
-			      vcsTag = projectVersion
+            desc = "MongoDB-backed job store for the Quartz scheduler"
+            vcsTag = projectVersion
         }
     }
+}
+
+import org.gradle.api.tasks.wrapper.Wrapper.DistributionType
+task wrapper(type: Wrapper) {
+    gradleVersion = "4.5"
+    distributionType = DistributionType.ALL
 }
