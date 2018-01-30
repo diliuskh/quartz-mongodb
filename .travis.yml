@@ -4,13 +4,7 @@ sudo: false
 
 script: ./gradlew check
 
-notifications:
-  recipients:
-    - michaelklishin@me.com
-
 jdk:
-  - openjdk7
-  - oraclejdk7
   - oraclejdk8
 
 cache:

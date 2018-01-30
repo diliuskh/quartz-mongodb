@@ -3,6 +3,7 @@ package com.novemberain.quartz.mongodb;
 import static com.novemberain.quartz.mongodb.util.Keys.KEY_GROUP;
 import static com.novemberain.quartz.mongodb.util.Keys.KEY_NAME;
 
+import java.util.Map;
 import org.bson.Document;
 import org.quartz.*;
 import org.quartz.spi.ClassLoadHelper;
@@ -69,7 +70,8 @@ public class JobConverter {
     JobDataMap jobData = new JobDataMap();
 
     if (!jobDataConverter.toJobData(doc, jobData)) {
-      for (String key : doc.keySet()) {
+      for (Map.Entry<String, Object> entry : doc.entrySet()) {
+        String key = entry.getKey();
         if (!key.equals(KEY_NAME)
             && !key.equals(KEY_GROUP)
             && !key.equals(JOB_CLASS)
@@ -77,7 +79,7 @@ public class JobConverter {
             && !key.equals(JOB_DURABILITY)
             && !key.equals(JOB_REQUESTS_RECOVERY)
             && !key.equals("_id")) {
-          jobData.put(key, doc.get(key));
+          jobData.put(key, entry.getValue());
         }
       }
     }

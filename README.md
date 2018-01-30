@@ -68,7 +68,7 @@ Set your Quartz properties to something like this:
 If you use [Quartzite](http://clojurequartz.info) or want your job classes to be available
 to Clojure code, use:
 
-    org.quartz.jobStore.class=com.novemberain.quartz.mongodb.DynamicMongoDBJobStore
+    org.quartz.jobStore.class=com.novemberain.quartz.mongodb.clojure.DynamicMongoDBJobStore
 
 (this assumes Clojure jar is on classpath).
 

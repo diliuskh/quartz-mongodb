@@ -13,7 +13,7 @@ class QuartzHelper {
     static def Properties createProps() {
         def props = new Properties()
         props.setProperty("org.quartz.jobStore.class",
-                "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")
+                "com.novemberain.quartz.mongodb.MongoDBJobStore")
         props.setProperty("org.quartz.jobStore.mongoUri",
                 "mongodb://localhost:${MongoHelper.DEFAULT_MONGO_PORT}")
         //;; Often check for triggers to speed up collisions:

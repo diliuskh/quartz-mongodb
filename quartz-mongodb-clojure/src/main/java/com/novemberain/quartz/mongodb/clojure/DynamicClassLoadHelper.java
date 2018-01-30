@@ -3,6 +3,9 @@ package com.novemberain.quartz.mongodb.clojure;
 import clojure.lang.DynamicClassLoader;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import org.quartz.spi.ClassLoadHelper;
 
 /**
@@ -13,7 +16,12 @@ public class DynamicClassLoadHelper implements ClassLoadHelper {
 
   @Override
   public ClassLoader getClassLoader() {
-    return new DynamicClassLoader();
+    try {
+      return AccessController.doPrivileged(
+          (PrivilegedExceptionAction<ClassLoader>) DynamicClassLoader::new);
+    } catch (PrivilegedActionException e) {
+      throw new SecurityException(e);
+    }
   }
 
   @Override

@@ -246,7 +246,12 @@ public class MongoConnectorBuilder {
   }
 
   public MongoConnectorBuilder withAddresses(final String[] addresses) {
-    this.addresses = addresses;
+    if (addresses == null) {
+      this.addresses = null;
+    } else {
+      this.addresses = new String[addresses.length];
+      System.arraycopy(addresses, 0, this.addresses, 0, addresses.length);
+    }
     return this;
   }
 

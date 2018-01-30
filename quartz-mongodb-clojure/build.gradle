@@ -1,0 +1,97 @@
+plugins {
+    // https://github.com/sherter/google-java-format-gradle-plugin
+    id "com.github.sherter.google-java-format" version "0.6"
+
+    // https://github.com/tbroyer/gradle-errorprone-plugin
+    id "net.ltgt.errorprone" version "0.0.13"
+
+    // http://spotbugs.readthedocs.io/en/latest/gradle.html
+    id "com.github.spotbugs" version "1.6.0"
+
+    id "net.researchgate.release" version "2.6.0"
+    id "com.jfrog.bintray" version "1.8.0"
+    id "java"
+    id "idea"
+    id "maven"
+    id "maven-publish"
+}
+
+sourceCompatibility = targetCompatibility= 1.8
+
+googleJavaFormat {
+    toolVersion = '1.5'
+}
+
+dependencies {
+    errorprone "com.google.errorprone:error_prone_core:${errorProneVersion}"
+    compile project(':quartz-mongodb-core')
+    compile("org.clojure:clojure:${clojureVersion}")
+}
+
+spotbugs {
+    // https://github.com/spotbugs/spotbugs/releases/latest
+    toolVersion = spotBugsVersion
+    ignoreFailures=false
+}
+// To generate an HTML report instead of XML
+import com.github.spotbugs.SpotBugsTask
+tasks.withType(SpotBugsTask) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+jar {
+    baseName = "quartz-mongodb-clojure"
+    version = version
+}
+
+release {
+    scmAdapters = [net.researchgate.release.GitAdapter]
+}
+
+task sourceJar(type: Jar) {
+    dependsOn classes
+    classifier "sources"
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourceJar
+}
+
+publishing {
+    publications {
+        QuartzMongoDB(MavenPublication) {
+            from components.java
+            groupId "com.novemberain"
+            artifactId(jar.baseName)
+            version(projectVersion)
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv("BINTRAY_USERNAME")
+    key = System.getenv("BINTRAY_API_KEY")
+    publications = ["QuartzMongoDB"]
+    pkg {
+        repo = "maven"
+        name = "quartz-mongodb-clojure"
+        labels = ["quartz", "mongodb"]
+        userOrg = "lazystone"
+        licenses = ["Apache-2.0"]
+        vcsUrl = "https://github.com/lazystone/quartz-mongodb.git"
+
+        version {
+            name = projectVersion
+            desc = "MongoDB-backed job store for the Quartz scheduler"
+            vcsTag = projectVersion
+        }
+    }
+}

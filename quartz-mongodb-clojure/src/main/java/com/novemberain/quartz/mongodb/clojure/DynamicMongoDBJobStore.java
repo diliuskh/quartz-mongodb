@@ -1,7 +1,7 @@
-package com.novemberain.quartz.mongodb;
+package com.novemberain.quartz.mongodb.clojure;
 
 import com.mongodb.MongoClient;
-import com.novemberain.quartz.mongodb.clojure.DynamicClassLoadHelper;
+import com.novemberain.quartz.mongodb.MongoDBJobStore;
 import org.quartz.spi.ClassLoadHelper;
 
 public class DynamicMongoDBJobStore extends MongoDBJobStore {
