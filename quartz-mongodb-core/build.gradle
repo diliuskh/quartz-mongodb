@@ -60,7 +60,6 @@ test {
 mongo {
     journalingEnabled true
     port 12345
-    logging "console"
     mongoVersion "3.6.2"
 }
 

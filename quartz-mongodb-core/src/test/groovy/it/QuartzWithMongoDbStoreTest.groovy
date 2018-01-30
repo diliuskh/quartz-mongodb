@@ -2,19 +2,7 @@ package it
 
 import com.novemberain.quartz.mongodb.MongoHelper
 import com.novemberain.quartz.mongodb.QuartzHelper
-import org.quartz.CalendarIntervalScheduleBuilder
-import org.quartz.Job
-import org.quartz.JobBuilder
-import org.quartz.JobDetail
-import org.quartz.JobExecutionContext
-import org.quartz.JobExecutionException
-import org.quartz.JobKey
-import org.quartz.ObjectAlreadyExistsException
-import org.quartz.Scheduler
-import org.quartz.SimpleScheduleBuilder
-import org.quartz.Trigger
-import org.quartz.TriggerBuilder
-import org.quartz.TriggerKey
+import org.quartz.*
 import org.quartz.impl.matchers.GroupMatcher
 import spock.lang.Shared
 import spock.lang.Specification
@@ -32,7 +20,8 @@ import static org.quartz.impl.matchers.GroupMatcher.groupEquals
  */
 class QuartzWithMongoDbStoreTest extends Specification {
 
-    @Shared def Scheduler scheduler
+    @Shared
+    Scheduler scheduler
 
     def setupSpec() {
         MongoHelper.dropTestDB()
@@ -54,7 +43,7 @@ class QuartzWithMongoDbStoreTest extends Specification {
 
     // Case 1:
     static latch1 = new CountDownLatch(10)
-    public static class JobA implements Job {
+    static class JobA implements Job {
         @Override
         void execute(JobExecutionContext ctx) throws JobExecutionException {
             latch1.countDown()
@@ -86,7 +75,7 @@ class QuartzWithMongoDbStoreTest extends Specification {
 
     // Case 2:
     static counter2 = new AtomicInteger(0)
-    public static class JobB implements Job {
+    static class JobB implements Job {
         @Override
         void execute(JobExecutionContext ctx) throws JobExecutionException {
             counter2.incrementAndGet()
@@ -150,12 +139,12 @@ class QuartzWithMongoDbStoreTest extends Specification {
         Thread.sleep(2000)
 
         then:
-        counter2.get() < 7
+        counter2.get() > 4
     }
 
     // Case 3:
     static counter3 = new AtomicInteger(0)
-    public static class JobC implements Job {
+    static class JobC implements Job {
         @Override
         void execute(JobExecutionContext ctx) throws JobExecutionException {
             counter3.incrementAndGet()
@@ -186,7 +175,7 @@ class QuartzWithMongoDbStoreTest extends Specification {
 
     // Case 4:
     static counter4 = Collections.synchronizedMap([:])
-    public static class JobD implements Job {
+    static class JobD implements Job {
         @Override
         void execute(JobExecutionContext ctx) throws JobExecutionException {
             counter4.putAll(ctx.getMergedJobDataMap())
@@ -219,7 +208,7 @@ class QuartzWithMongoDbStoreTest extends Specification {
 
     // Case 5:
     static counter5 = new AtomicInteger(0)
-    public static class JobE implements Job {
+    static class JobE implements Job {
         @Override
         void execute(JobExecutionContext ctx) throws JobExecutionException {
             counter5.addAndGet(ctx.getMergedJobDataMap().getInt('jobKey'))
@@ -272,7 +261,7 @@ class QuartzWithMongoDbStoreTest extends Specification {
 
     // Case 6:
     static latch6 = new CountDownLatch(3)
-    public static class JobF implements Job {
+    static class JobF implements Job {
         @Override
         void execute(JobExecutionContext ctx) throws JobExecutionException {
             latch6.countDown()
@@ -297,7 +286,7 @@ class QuartzWithMongoDbStoreTest extends Specification {
 
     // Case 7:
     static counter7 = new AtomicInteger(0)
-    public static class JobG implements Job {
+    static class JobG implements Job {
         @Override
         void execute(JobExecutionContext ctx) throws JobExecutionException {
             counter7.incrementAndGet()
@@ -337,28 +326,28 @@ class QuartzWithMongoDbStoreTest extends Specification {
         counter7.get() == 3
     }
 
-    def List<JobDetail> matchingJobs(GroupMatcher matcher) {
+    List<JobDetail> matchingJobs(GroupMatcher matcher) {
         scheduler.getJobKeys(matcher).collect { scheduler.getJobDetail(it) }
     }
 
-    def List<Trigger> matchingTriggers(GroupMatcher matcher) {
+    List<Trigger> matchingTriggers(GroupMatcher matcher) {
         scheduler.getTriggerKeys(matcher).collect { scheduler.getTrigger(it) }
     }
 
-    def boolean maybeSchedule(JobDetail job, Trigger trigger) {
+    boolean maybeSchedule(JobDetail job, Trigger trigger) {
         if (scheduler.checkExists(job.getKey()) || scheduler.checkExists(trigger.getKey())) {
             return false
         }
         scheduler.scheduleJob(job, trigger) != null
     }
 
-    def 'schedule via scheduleJobs method'(){
+    def 'schedule via scheduleJobs method'() {
         given:
         def jobKey = new JobKey('foo', 'bar')
         def job = JobBuilder.newJob(JobH).withIdentity(jobKey).build()
         def trigger = TriggerBuilder.newTrigger().build()
         def jobsAndTriggers = [:]
-        jobsAndTriggers.put(job, [ trigger ] as Set)
+        jobsAndTriggers.put(job, [trigger] as Set)
         when:
         scheduler.scheduleJobs(jobsAndTriggers, false)
         then:
@@ -366,9 +355,9 @@ class QuartzWithMongoDbStoreTest extends Specification {
         scheduler.getTriggersOfJob(jobKey) == [trigger]
     }
 
-    public static class JobH implements Job {
-      @Override
-      void execute(JobExecutionContext ctx) throws JobExecutionException {
-      }
-  }
+    static class JobH implements Job {
+        @Override
+        void execute(JobExecutionContext ctx) throws JobExecutionException {
+        }
+    }
 }
